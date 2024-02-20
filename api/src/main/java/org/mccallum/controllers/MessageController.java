@@ -2,14 +2,14 @@ package org.mccallum.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mccallum.Constants;
+import org.mccallum.dtos.WhatsappResponseHeirarchy.ChangeDTO;
+import org.mccallum.dtos.WhatsappResponseHeirarchy.EntryDTO;
 import org.mccallum.dtos.WhatsappResponseHeirarchy.WhatsappMessageWrapperDTO;
 import org.mccallum.services.ConversationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
 
 @RestController
 @RequestMapping("api/message")
@@ -42,23 +42,25 @@ public class MessageController {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             WhatsappMessageWrapperDTO wrapper = objectMapper.readValue(rawMessage, WhatsappMessageWrapperDTO.class);
-            System.out.println("Received message");
 
-            if (!wrapper.getEntry().get(0).getChanges().get(0).getValue().getMessages().isEmpty()) {
-                String senderPhoneNumber = wrapper.getEntry().get(0).getChanges().get(0).getValue().getMessages().get(0).getFrom();
-
-                conversationService.sendTemplateMessage(senderPhoneNumber, "maintenance");
-
-                System.out.println("Maintenance template message sent to: " + senderPhoneNumber);
-            } else {
-                System.out.println("No messages found in the payload.");
+            if (wrapper.getEntry() != null && !wrapper.getEntry().isEmpty()) {
+                for (EntryDTO entry : wrapper.getEntry()) {
+                    for (ChangeDTO change : entry.getChanges()) {
+                        if (change.getValue() != null && change.getValue().getMessages() != null && !change.getValue().getMessages().isEmpty()) {
+                            String senderPhoneNumber = change.getValue().getMessages().get(0).getFrom();
+                            conversationService.sendTemplateMessage(senderPhoneNumber, "maintenance");
+                            System.out.println("Maintenance template message sent to: " + senderPhoneNumber);
+                        }
+                    }
+                }
             }
 
-            return ResponseEntity.ok("Message received and processed");
+            return ResponseEntity.ok("Callback received and processed");
         } catch (Exception e) {
             System.err.println("Error parsing incoming message: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to parse message");
         }
     }
+
 
 }

@@ -53,23 +53,20 @@ public class ConversationService {
                 .status(ConversationStatus.ACTIVE)
                 .build();
 
-        // Convert DTO to Entity before saving
         ConversationEntity conversationEntity = ConversationMapper.convertDtoToEntity(conversation);
 
-        // Save the entity
         conversationRepository.save(conversationEntity);
 
         return conversation;
     }
 
     private String generateUniqueId() {
-        // Simple UUID generation for demonstration. Adjust based on your requirements.
         return UUID.randomUUID().toString();
     }
 
 
     public void sendMessage(String phoneNumber, String messageContent) {
-        String url = Constants.NGROK_URL + "/messages";
+        String url = Constants.FACEBOOK_URL;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -97,15 +94,12 @@ public class ConversationService {
     }
 
     public void sendTemplateMessage(String phoneNumber, String templateName) {
-        // Using the URL from your cURL command
-        String url = "https://graph.facebook.com/v18.0/247451325112757/messages";
+        String url = Constants.FACEBOOK_URL;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        // Use the actual bearer token from your environment or configuration
-        headers.setBearerAuth("EAAJVXcR1vV4BO6enRuL2wRoKUkz3eElowknNw48ZB8DDTkw9RiHFRqm4BSSPJgUDClU6FsLBEJ6tNvZALxEP0ptLv5ZBVincEgen02dbPcs5B7PAc9fo487wX4abs6wgrJB5UudvrdsfJChczCfdaqFEZB0J71ImCtGagqodbxnlEOBYE5CtZBUUS8fb3ZBmNtkJghTQcCRyOZCK0szfSgZD");
+        headers.setBearerAuth(Constants.BEARER_AUTH_TOKEN);
 
-        // Construct the request payload for the template message
         String requestJson = constructTemplateMessagePayload(phoneNumber, templateName, new HashMap<>()); // Assuming no parameters for simplicity
 
         HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
